@@ -7,7 +7,7 @@ from datetime import datetime
 def tela_pagamentos(root, usuario):
     janela = tk.Toplevel(root)
     janela.title("Pagamentos Mensais")
-    janela.geometry("1050x560")
+    janela.geometry("1000x600")
     janela.resizable(False, False)
 
     frame = tk.Frame(janela, bg="#ffffff")
@@ -56,7 +56,7 @@ def tela_pagamentos(root, usuario):
     valor.grid(row=2, column=1, padx=5, pady=5)
 
     tk.Label(form, text="Status:", bg="#ffffff").grid(row=2, column=2, sticky="w", padx=5, pady=5)
-    cb_status = ttk.Combobox(form, values=["PAGO", "PENDENTE"], width=22, state="readonly")
+    cb_status = ttk.Combobox(form, values=["Pago", "Pendente", "Bloqueado", "Prova Vida", "Óbito", "Família"], width=22, state="readonly")
     cb_status.grid(row=2, column=3, padx=5, pady=5)
     cb_status.current(0)
 

@@ -9,6 +9,11 @@ class TelaDashboard:
         self.root = root
         self.usuario = usuario
 
+        # ✅ AUMENTAR TAMANHO DA TELA
+        self.root.title("Dashboard - Lar de Idosos")
+        self.root.geometry("550x400")   # <-- tamanho aqui
+        self.root.resizable(False, False)  # <-- pode trocar pra True, True se quiser
+
         self.frame = tk.Frame(root, bg="#ffffff")
         self.frame.pack(fill="both", expand=True)
 
