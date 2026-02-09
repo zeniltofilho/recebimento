@@ -51,7 +51,13 @@ class TelaLogin:
         )
         info.pack(pady=5)
 
-    def entrar(self):
+        # ========= ENTER FUNCIONANDO =========
+        self.root.bind("<Return>", self.entrar)
+
+        # opcional: já começa com foco no usuário
+        self.usuario.focus()
+
+    def entrar(self, event=None):
         user = self.usuario.get().strip()
         senha = self.senha.get().strip()
 
