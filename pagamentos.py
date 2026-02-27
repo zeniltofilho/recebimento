@@ -9,6 +9,8 @@ def tela_pagamentos(root, usuario):
     janela.title("Pagamentos Mensais")
     janela.geometry("1000x600")
     janela.resizable(False, False)
+    janela.transient(root)
+    janela.grab_set()
 
     frame = tk.Frame(janela, bg="#ffffff")
     frame.pack(fill="both", expand=True)
@@ -23,7 +25,7 @@ def tela_pagamentos(root, usuario):
     conn.close()
 
     if not idosos:
-        messagebox.showwarning("Atenção", "Nenhum idoso cadastrado. Cadastre antes.")
+        messagebox.showwarning("Atenção", "Nenhum idoso cadastrado. Cadastre antes.", parent=janela)
         janela.destroy()
         return
 
@@ -147,11 +149,11 @@ def tela_pagamentos(root, usuario):
             ob = obs.get().strip()
 
             if not ma or "/" not in ma:
-                messagebox.showwarning("Atenção", "Digite o mês/ano corretamente (ex: 02/2026).")
+                messagebox.showwarning("Atenção", "Digite o mês/ano corretamente (ex: 02/2026).", parent=janela)
                 return
 
             if not b:
-                messagebox.showwarning("Atenção", "Digite o banco.")
+                messagebox.showwarning("Atenção", "Digite o banco.", parent=janela)
                 return
 
             casa = round(v * 0.70, 2)
@@ -183,11 +185,11 @@ def tela_pagamentos(root, usuario):
             conn.commit()
             conn.close()
 
-            messagebox.showinfo("OK", "Pagamento salvo com sucesso.")
+            messagebox.showinfo("OK", "Pagamento salvo com sucesso.", parent=janela)
             carregar()
 
         except:
-            messagebox.showerror("Erro", "Preencha corretamente os campos (principalmente o valor).")
+            messagebox.showerror("Erro", "Preencha corretamente os campos (principalmente o valor).", parent=janela)
 
     def carregar_banco_do_idoso():
         try:

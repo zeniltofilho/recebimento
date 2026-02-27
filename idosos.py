@@ -8,6 +8,8 @@ def tela_idosos(root):
     janela.title("Cadastro de Idosos")
     janela.geometry("820x600")
     janela.resizable(False, False)
+    janela.transient(root)
+    janela.grab_set()
 
     frame = tk.Frame(janela, bg="#ffffff")
     frame.pack(fill="both", expand=True)
@@ -78,7 +80,7 @@ def tela_idosos(root):
         ob = obs.get().strip()
 
         if not n:
-            messagebox.showwarning("Atenção", "Digite o nome do idoso.")
+            messagebox.showwarning("Atenção", "Digite o nome do idoso.", parent=janela)
             return
 
         conn = conectar()
@@ -97,18 +99,18 @@ def tela_idosos(root):
         obs.delete(0, "end")
 
         carregar()
-        messagebox.showinfo("OK", "Idoso cadastrado com sucesso.")
+        messagebox.showinfo("OK", "Idoso cadastrado com sucesso.", parent=janela)
 
     def remover():
         item = tabela.selection()
         if not item:
-            messagebox.showwarning("Atenção", "Selecione um idoso na tabela.")
+            messagebox.showwarning("Atenção", "Selecione um idoso na tabela.", parent=janela)
             return
 
         valores = tabela.item(item)["values"]
         id_idoso = valores[0]
 
-        if not messagebox.askyesno("Confirmar", "Deseja remover esse idoso?"):
+        if not messagebox.askyesno("Confirmar", "Deseja remover esse idoso?", parent=janela):
             return
 
         conn = conectar()

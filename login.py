@@ -72,6 +72,8 @@ class TelaLogin:
         conn.close()
 
         if achou:
+            # Remove o binding do Enter antes de mudar de tela
+            self.root.unbind("<Return>")
             self.frame.destroy()
             TelaDashboard(self.root, user)
         else:
