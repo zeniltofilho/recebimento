@@ -20,6 +20,16 @@ def tela_relatorios(root):
     janela.title("Relatórios")
     janela.geometry("1050x560")
     janela.resizable(False, False)
+    janela.update_idletasks()
+    largura_janela = janela.winfo_width()
+    altura_janela = janela.winfo_height()
+    largura_tela = janela.winfo_screenwidth()
+    altura_tela = janela.winfo_screenheight()
+    pos_x = (largura_tela // 2) - (largura_janela // 2)
+    pos_y = (altura_tela // 2) - (altura_janela // 2)
+    janela.geometry(f"{largura_janela}x{altura_janela}+{pos_x}+{pos_y}")
+    janela.transient(root)
+    janela.grab_set()
 
     frame = tk.Frame(janela, bg="#ffffff")
     frame.pack(fill="both", expand=True)
@@ -110,14 +120,15 @@ def tela_relatorios(root):
         dados = pegar_dados_da_tabela()
 
         if not dados:
-            messagebox.showwarning("Atenção", "Não há dados para gerar o PDF.")
+            messagebox.showwarning("Atenção", "Não há dados para gerar o PDF.", parent=janela)
             return
 
         arquivo = filedialog.asksaveasfilename(
             defaultextension=".pdf",
             filetypes=[("Arquivo PDF", "*.pdf")],
             title="Salvar Relatório em PDF",
-            initialfile="relatorio_pagamentos.pdf"
+            initialfile="relatorio_pagamentos.pdf",
+            parent=janela
         )
 
         if not arquivo:
@@ -201,7 +212,9 @@ def tela_relatorios(root):
 
         c.save()
 
-        messagebox.showinfo("Sucesso", f"PDF gerado com sucesso!\n\n{arquivo}")
+        messagebox.showinfo("Sucesso", f"PDF gerado com sucesso!\n\n{arquivo}", parent=janela)
+        janela.lift()
+        janela.focus_force()
 
     # ============================
     # IMPRIMIR
@@ -211,13 +224,14 @@ def tela_relatorios(root):
         if win32api is None:
             messagebox.showerror(
                 "Erro",
-                "Impressão automática só funciona no Windows.\n\nInstale: pip install pywin32"
+                "Impressão automática só funciona no Windows.\n\nInstale: pip install pywin32",
+                parent=janela
             )
             return
 
         dados = pegar_dados_da_tabela()
         if not dados:
-            messagebox.showwarning("Atenção", "Não há dados para imprimir.")
+            messagebox.showwarning("Atenção", "Não há dados para imprimir.", parent=janela)
             return
 
         # gera um PDF temporário na pasta do sistema
@@ -271,9 +285,9 @@ def tela_relatorios(root):
         # manda imprimir
         try:
             win32api.ShellExecute(0, "print", temp_pdf, None, ".", 0)
-            messagebox.showinfo("Imprimir", "Relatório enviado para impressão.")
+            messagebox.showinfo("Imprimir", "Relatório enviado para impressão.", parent=janela)
         except Exception as e:
-            messagebox.showerror("Erro", f"Não foi possível imprimir.\n\n{e}")
+            messagebox.showerror("Erro", f"Não foi possível imprimir.\n\n{e}", parent=janela)
 
     # ============================
     # BOTÕES

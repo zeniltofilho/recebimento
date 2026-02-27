@@ -1,6 +1,19 @@
 import sqlite3
+import os
+import sys
 
-DB_NAME = "lar_idosos.db"
+
+def obter_caminho_banco():
+    if getattr(sys, "frozen", False):
+        base_dir = os.path.join(os.environ.get("LOCALAPPDATA", os.path.expanduser("~")), "SistemaLarIdosos")
+        os.makedirs(base_dir, exist_ok=True)
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    return os.path.join(base_dir, "lar_idosos.db")
+
+
+DB_NAME = obter_caminho_banco()
 
 
 def conectar():

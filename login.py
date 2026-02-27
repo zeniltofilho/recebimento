@@ -51,10 +51,9 @@ class TelaLogin:
         )
         info.pack(pady=5)
 
-        # ========= ENTER FUNCIONANDO =========
-        self.root.bind("<Return>", self.entrar)
+        self.usuario.bind("<Return>", lambda event: self.senha.focus_set())
+        self.senha.bind("<Return>", self.entrar)
 
-        # opcional: já começa com foco no usuário
         self.usuario.focus()
 
     def entrar(self, event=None):
@@ -72,8 +71,6 @@ class TelaLogin:
         conn.close()
 
         if achou:
-            # Remove o binding do Enter antes de mudar de tela
-            self.root.unbind("<Return>")
             self.frame.destroy()
             TelaDashboard(self.root, user)
         else:

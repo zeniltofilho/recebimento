@@ -8,6 +8,14 @@ def tela_idosos(root):
     janela.title("Cadastro de Idosos")
     janela.geometry("820x600")
     janela.resizable(False, False)
+    janela.update_idletasks()
+    largura_janela = janela.winfo_width()
+    altura_janela = janela.winfo_height()
+    largura_tela = janela.winfo_screenwidth()
+    altura_tela = janela.winfo_screenheight()
+    pos_x = (largura_tela // 2) - (largura_janela // 2)
+    pos_y = (altura_tela // 2) - (altura_janela // 2)
+    janela.geometry(f"{largura_janela}x{altura_janela}+{pos_x}+{pos_y}")
     janela.transient(root)
     janela.grab_set()
 
@@ -58,6 +66,14 @@ def tela_idosos(root):
     tabela.column("agencia", width=100)
     tabela.column("conta", width=120)
     tabela.column("obs", width=250)
+    id_idoso_em_edicao = None
+
+    def limpar_campos():
+        nome.delete(0, "end")
+        banco.delete(0, "end")
+        agencia.delete(0, "end")
+        conta.delete(0, "end")
+        obs.delete(0, "end")
 
     def carregar():
         for item in tabela.get_children():
@@ -73,6 +89,7 @@ def tela_idosos(root):
             tabela.insert("", "end", values=d)
 
     def salvar():
+        nonlocal id_idoso_em_edicao
         n = nome.get().strip()
         b = banco.get().strip()
         ag = agencia.get().strip()
@@ -85,21 +102,40 @@ def tela_idosos(root):
 
         conn = conectar()
         cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO idosos (nome, banco, agencia, conta, observacoes) VALUES (?, ?, ?, ?, ?)",
-            (n, b, ag, ct, ob)
-        )
+        if id_idoso_em_edicao:
+            cur.execute(
+                "UPDATE idosos SET nome=?, banco=?, agencia=?, conta=?, observacoes=? WHERE id=?",
+                (n, b, ag, ct, ob, id_idoso_em_edicao)
+            )
+        else:
+            cur.execute(
+                "INSERT INTO idosos (nome, banco, agencia, conta, observacoes) VALUES (?, ?, ?, ?, ?)",
+                (n, b, ag, ct, ob)
+            )
         conn.commit()
         conn.close()
-
-        nome.delete(0, "end")
-        banco.delete(0, "end")
-        agencia.delete(0, "end")
-        conta.delete(0, "end")
-        obs.delete(0, "end")
+        limpar_campos()
+        id_idoso_em_edicao = None
 
         carregar()
-        messagebox.showinfo("OK", "Idoso cadastrado com sucesso.", parent=janela)
+        messagebox.showinfo("OK", "Registro salvo com sucesso.", parent=janela)
+
+    def editar():
+        nonlocal id_idoso_em_edicao
+        item = tabela.selection()
+        if not item:
+            messagebox.showwarning("Atenção", "Selecione um idoso na tabela.", parent=janela)
+            return
+
+        valores = tabela.item(item)["values"]
+        id_idoso_em_edicao = valores[0]
+
+        limpar_campos()
+        nome.insert(0, valores[1] if len(valores) > 1 else "")
+        banco.insert(0, valores[2] if len(valores) > 2 else "")
+        agencia.insert(0, valores[3] if len(valores) > 3 else "")
+        conta.insert(0, valores[4] if len(valores) > 4 else "")
+        obs.insert(0, valores[5] if len(valores) > 5 else "")
 
     def remover():
         item = tabela.selection()
@@ -125,7 +161,8 @@ def tela_idosos(root):
     botoes.pack(pady=5)
 
     tk.Button(botoes, text="Salvar", width=15, bg="#27ae60", fg="white", relief="flat", command=salvar).grid(row=0, column=0, padx=5)
-    tk.Button(botoes, text="Remover", width=15, bg="#e74c3c", fg="white", relief="flat", command=remover).grid(row=0, column=1, padx=5)
-    tk.Button(botoes, text="Atualizar Lista", width=15, bg="#2980b9", fg="white", relief="flat", command=carregar).grid(row=0, column=2, padx=5)
+    tk.Button(botoes, text="Editar", width=15, bg="#f39c12", fg="white", relief="flat", command=editar).grid(row=0, column=1, padx=5)
+    tk.Button(botoes, text="Remover", width=15, bg="#e74c3c", fg="white", relief="flat", command=remover).grid(row=0, column=2, padx=5)
+    tk.Button(botoes, text="Atualizar Lista", width=15, bg="#2980b9", fg="white", relief="flat", command=carregar).grid(row=0, column=3, padx=5)
 
     carregar()

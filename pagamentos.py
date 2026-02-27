@@ -9,6 +9,14 @@ def tela_pagamentos(root, usuario):
     janela.title("Pagamentos Mensais")
     janela.geometry("1000x600")
     janela.resizable(False, False)
+    janela.update_idletasks()
+    largura_janela = janela.winfo_width()
+    altura_janela = janela.winfo_height()
+    largura_tela = janela.winfo_screenwidth()
+    altura_tela = janela.winfo_screenheight()
+    pos_x = (largura_tela // 2) - (largura_janela // 2)
+    pos_y = (altura_tela // 2) - (altura_janela // 2)
+    janela.geometry(f"{largura_janela}x{altura_janela}+{pos_x}+{pos_y}")
     janela.transient(root)
     janela.grab_set()
 
@@ -117,6 +125,18 @@ def tela_pagamentos(root, usuario):
     tabela.column("idoso_valor", width=80)
     tabela.column("status", width=90)
     tabela.column("usuario", width=90)
+    id_pagamento_em_edicao = None
+
+    def limpar_campos_pagamento():
+        mes_ano.delete(0, "end")
+        mes_ano.insert(0, datetime.now().strftime("%m/%Y"))
+        data.delete(0, "end")
+        data.insert(0, datetime.now().strftime("%d/%m/%Y"))
+        valor.delete(0, "end")
+        obs.delete(0, "end")
+        cb_status.current(0)
+        carregar_banco_do_idoso()
+        atualizar_calculo()
 
     def carregar():
         for item in tabela.get_children():
@@ -139,6 +159,7 @@ def tela_pagamentos(root, usuario):
             tabela.insert("", "end", values=d)
 
     def salvar():
+        nonlocal id_pagamento_em_edicao
         try:
             id_idoso = int(cb_idoso.get().split(" - ")[0])
             ma = mes_ano.get().strip()
@@ -162,34 +183,99 @@ def tela_pagamentos(root, usuario):
             conn = conectar()
             cur = conn.cursor()
 
-            # Se já existir pagamento daquele idoso no mesmo mês, atualiza
-            cur.execute("""
-                SELECT id FROM pagamentos WHERE id_idoso=? AND mes_ano=?
-            """, (id_idoso, ma))
-            existe = cur.fetchone()
-
-            if existe:
-                id_pag = existe[0]
+            if id_pagamento_em_edicao:
                 cur.execute("""
                     UPDATE pagamentos
-                    SET data=?, banco=?, valor=?, valor_casa=?, valor_idoso=?, status=?, observacao=?, usuario=?
+                    SET id_idoso=?, mes_ano=?, data=?, banco=?, valor=?, valor_casa=?, valor_idoso=?, status=?, observacao=?, usuario=?
                     WHERE id=?
-                """, (dt, b, v, casa, idoso_v, st, ob, usuario, id_pag))
+                """, (id_idoso, ma, dt, b, v, casa, idoso_v, st, ob, usuario, id_pagamento_em_edicao))
             else:
+                # Se já existir pagamento daquele idoso no mesmo mês, atualiza
                 cur.execute("""
-                    INSERT INTO pagamentos
-                    (id_idoso, mes_ano, data, banco, valor, valor_casa, valor_idoso, status, observacao, usuario)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (id_idoso, ma, dt, b, v, casa, idoso_v, st, ob, usuario))
+                    SELECT id FROM pagamentos WHERE id_idoso=? AND mes_ano=?
+                """, (id_idoso, ma))
+                existe = cur.fetchone()
+
+                if existe:
+                    id_pag = existe[0]
+                    cur.execute("""
+                        UPDATE pagamentos
+                        SET data=?, banco=?, valor=?, valor_casa=?, valor_idoso=?, status=?, observacao=?, usuario=?
+                        WHERE id=?
+                    """, (dt, b, v, casa, idoso_v, st, ob, usuario, id_pag))
+                else:
+                    cur.execute("""
+                        INSERT INTO pagamentos
+                        (id_idoso, mes_ano, data, banco, valor, valor_casa, valor_idoso, status, observacao, usuario)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (id_idoso, ma, dt, b, v, casa, idoso_v, st, ob, usuario))
 
             conn.commit()
             conn.close()
 
             messagebox.showinfo("OK", "Pagamento salvo com sucesso.", parent=janela)
             carregar()
+            limpar_campos_pagamento()
+            id_pagamento_em_edicao = None
 
         except:
             messagebox.showerror("Erro", "Preencha corretamente os campos (principalmente o valor).", parent=janela)
+
+    def editar():
+        nonlocal id_pagamento_em_edicao
+        item = tabela.selection()
+        if not item:
+            messagebox.showwarning("Atenção", "Selecione um pagamento na tabela.", parent=janela)
+            return
+
+        valores = tabela.item(item)["values"]
+        id_pagamento_em_edicao = valores[0]
+
+        conn = conectar()
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id_idoso, mes_ano, data, banco, valor, status, observacao
+            FROM pagamentos
+            WHERE id=?
+            """,
+            (id_pagamento_em_edicao,)
+        )
+        registro = cur.fetchone()
+        conn.close()
+
+        if not registro:
+            messagebox.showerror("Erro", "Registro não encontrado para edição.", parent=janela)
+            id_pagamento_em_edicao = None
+            return
+
+        id_idoso, ma, dt, b, v, st, ob = registro
+
+        for indice, item_nome in enumerate(lista_nomes):
+            if item_nome.startswith(f"{id_idoso} - "):
+                cb_idoso.current(indice)
+                break
+
+        mes_ano.delete(0, "end")
+        mes_ano.insert(0, ma if ma else "")
+
+        data.delete(0, "end")
+        data.insert(0, dt if dt else "")
+
+        banco.delete(0, "end")
+        banco.insert(0, b if b else "")
+
+        valor.delete(0, "end")
+        valor.insert(0, str(v) if v is not None else "")
+
+        if st in cb_status["values"]:
+            cb_status.set(st)
+        else:
+            cb_status.current(0)
+
+        obs.delete(0, "end")
+        obs.insert(0, ob if ob else "")
+        atualizar_calculo()
 
     def carregar_banco_do_idoso():
         try:
@@ -212,7 +298,8 @@ def tela_pagamentos(root, usuario):
     botoes.pack(pady=5)
 
     tk.Button(botoes, text="Salvar / Atualizar Mês", width=22, bg="#27ae60", fg="white", relief="flat", command=salvar).grid(row=0, column=0, padx=5)
-    tk.Button(botoes, text="Atualizar Lista", width=18, bg="#2980b9", fg="white", relief="flat", command=carregar).grid(row=0, column=1, padx=5)
+    tk.Button(botoes, text="Editar", width=18, bg="#f39c12", fg="white", relief="flat", command=editar).grid(row=0, column=1, padx=5)
+    tk.Button(botoes, text="Atualizar Lista", width=18, bg="#2980b9", fg="white", relief="flat", command=carregar).grid(row=0, column=2, padx=5)
 
     carregar_banco_do_idoso()
     carregar()
