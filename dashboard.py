@@ -13,6 +13,16 @@ class TelaDashboard:
         self.root.title("Dashboard - Lar de Idosos")
         self.root.geometry("550x400")   # <-- tamanho aqui
         self.root.resizable(False, False)  # <-- pode trocar pra True, True se quiser
+        
+        # Centralizar janela na tela
+        self.root.update_idletasks()
+        largura_janela = self.root.winfo_width()
+        altura_janela = self.root.winfo_height()
+        largura_tela = self.root.winfo_screenwidth()
+        altura_tela = self.root.winfo_screenheight()
+        pos_x = (largura_tela // 2) - (largura_janela // 2)
+        pos_y = (altura_tela // 2) - (altura_janela // 2)
+        self.root.geometry(f"{largura_janela}x{altura_janela}+{pos_x}+{pos_y}")
 
         self.frame = tk.Frame(root, bg="#ffffff")
         self.frame.pack(fill="both", expand=True)
